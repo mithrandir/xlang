@@ -981,11 +981,16 @@ namespace winrt::@::implementation
                 w.async_types = is_async(method, signature);
                 auto method_name = get_name(method);
 
-                w.write("        % %(%)%;\n",
-                    signature.return_signature(),
+                // w.write("        % %(%)%;\n",
+                //     signature.return_signature(),
+                //     method_name,
+                //     bind<write_implementation_params>(signature),
+                //     is_noexcept(method) ? " noexcept" : "");
+                w.write("        MOCK_METHOD%(%, %(%);\n",
+                    signature.params().size(),
                     method_name,
-                    bind<write_implementation_params>(signature),
-                    is_noexcept(method) ? " noexcept" : "");
+                    signature.return_signature(),
+                    bind<write_implementation_params>(signature));
             }
 
             w.generic_param_stack.resize(w.generic_param_stack.size() - info.generic_param_stack.size());

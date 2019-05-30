@@ -20,7 +20,8 @@ namespace xlang
         { "input", 0, cmd::option::no_max, "<spec>", "Windows metadata to include in projection" },
         { "reference", 0, cmd::option::no_max, "<spec>", "Windows metadata to reference from projection" },
         { "output", 0, 1, "<path>", "Location of generated projection and component templates" },
-        { "component", 0, 1, "[<path>]", "Generate component templates, and optional implementation" },
+        { "component", 0, 1, "[<path>]", "oops Generate component templates, and optional implementation" },
+        { "mock", 0, 0, {}, "Generate GMock based mock object" },
         { "name", 0, 1, "<name>", "Specify explicit name for component files" },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "overwrite", 0, 0, {}, "Overwrite generated component files" },
@@ -120,7 +121,7 @@ Where <spec> is one or more of:
         {
             settings.component_overwrite = args.exists("overwrite");
             settings.component_name = args.value("name");
-
+            settings.mock = args.exists("mock");
             if (settings.component_name.empty())
             {
                 // For compatibility with C++/WinRT 1.0, the component_name defaults to the *first*

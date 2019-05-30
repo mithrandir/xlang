@@ -14,6 +14,7 @@ namespace xlang
         bool verbose{};
 
         bool component{};
+        bool mock{};
         std::string component_folder;
         std::string component_name;
         std::string component_pch;
