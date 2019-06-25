@@ -255,7 +255,10 @@ namespace xlang
             return;
         }
 
-        auto path = settings.component_folder + get_component_filename(type) + ".h";
+		std::string path = settings.component_folder;
+		path += "Mock";
+		path += type.TypeName();
+		path += ".h";
 
         if (!settings.component_overwrite && exists(path))
         {
@@ -275,7 +278,11 @@ namespace xlang
             return;
         }
 
-        auto path = settings.component_folder + get_component_filename(type) + ".cpp";
+        // auto path = settings.component_folder + get_component_filename(type) + ".cpp";
+		std::string path = settings.component_folder;
+		path += "Mock";
+		path += type.TypeName();
+		path += ".cpp";
 
         if (!settings.component_overwrite && exists(path))
         {

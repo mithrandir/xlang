@@ -981,12 +981,7 @@ namespace winrt::@::implementation
                 w.async_types = is_async(method, signature);
                 auto method_name = get_name(method);
 
-                // w.write("        % %(%)%;\n",
-                //     signature.return_signature(),
-                //     method_name,
-                //     bind<write_implementation_params>(signature),
-                //     is_noexcept(method) ? " noexcept" : "");
-                w.write("        MOCK_METHOD%(%, %(%);\n",
+                w.write("        MOCK_METHOD%(%, %(%));\n",
                     signature.params().size(),
                     method_name,
                     signature.return_signature(),
@@ -1022,7 +1017,7 @@ static_assert(false, "Do not compile generated C++/WinRT source files directly")
 
         {
             auto format = R"(#include "%.g.h"
-%%
+%
 namespace winrt::@::implementation
 {
     struct %%
@@ -1036,7 +1031,7 @@ namespace winrt::@::implementation
             w.write(format,
                 get_generated_component_filename(type),
                 base_include,
-                bind<write_generated_static_assert>(),
+                    // bind<write_generated_static_assert>(),
                 type_namespace,
                 type_name,
                 bind<write_component_base>(type),
@@ -1075,6 +1070,7 @@ namespace winrt::@::implementation
                 {
                     continue;
                 }
+
 
                 auto format = R"(    %::%(%)
     {
@@ -1162,7 +1158,8 @@ namespace winrt::@::implementation
 
     static void write_component_cpp(writer& w, TypeDef const& type)
     {
-        auto filename = get_component_filename(type);
+        //auto filename = get_component_filename(type);
+		auto filename = type.TypeName();
 
         {
             auto format = R"(#include "%.h"
@@ -1179,16 +1176,17 @@ namespace winrt::@::implementation
             w.write(format, filename);
         }
 
-        auto format = R"(%
+        auto format = R"(
 namespace winrt::@::implementation
 {
-%}
+}
 )";
 
         w.write(format,
-            bind<write_generated_static_assert>(),
-            type.TypeNamespace(),
-            bind<write_component_member_definitions>(type));
+                //            bind<write_generated_static_assert>(),
+            type.TypeNamespace()
+//                ,bind<write_component_member_definitions>(type)
+            );
     }
 
     static void write_component_fast_abi_thunk(writer& w)

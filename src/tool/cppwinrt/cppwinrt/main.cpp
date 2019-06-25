@@ -291,6 +291,7 @@ Where <spec> is one or more of:
             w.flush_to_console();
             task_group group;
 
+#if 0
             for (auto&&[ns, members] : c.namespaces())
             {
                 group.add([&, &ns = ns, &members = members]
@@ -306,7 +307,7 @@ Where <spec> is one or more of:
                     write_namespace_h(c, ns, members);
                 });
             }
-
+#endif
             if (settings.base)
             {
                 write_base_h();

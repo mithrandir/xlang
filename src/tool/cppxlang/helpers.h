@@ -471,7 +471,8 @@ namespace xlang
 
     static std::string get_component_filename(TypeDef const& type)
     {
-        std::string result{ type.TypeNamespace() };
+#if 1
+		std::string result{ type.TypeNamespace() };
         result += '.';
         result += type.TypeName();
 
@@ -486,7 +487,12 @@ namespace xlang
         }
 
         return result;
-    }
+#else
+		auto result = std::string("Mock");
+		result += type.TypeName();
+		return result;
+#endif
+	}
 
     static std::string get_generated_component_filename(TypeDef const& type)
     {
