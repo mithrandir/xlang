@@ -1017,7 +1017,7 @@ static_assert(false, "Do not compile generated C++/WinRT source files directly")
 
         {
             auto format = R"(#include "%.g.h"
-%
+%#include <gmock.h>
 namespace winrt::@::implementation
 {
     struct %%
