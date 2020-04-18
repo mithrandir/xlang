@@ -992,6 +992,111 @@ namespace winrt::@::implementation
         }
     }
 
+    static void write_component_stub_member_declarations(writer& w, TypeDef const& type)
+    {
+        auto type_name = type.TypeName();
+
+        for (auto&&[factory_name, factory] : get_factories(w, type))
+        {
+            if (factory.activatable || factory.composable)
+            {
+                // Shouldn't have factory for this kind of stub's? or I should care about factories... just keep static method anyway.
+                if (!factory.type)
+                {
+                    continue;
+                }
+
+                for (auto&& method : factory.type.MethodList())
+                {
+                    method_signature signature{ method };
+                    auto& params = signature.params();
+
+                    if (factory.composable)
+                    {
+                        params.resize(params.size() - 2);
+                    }
+
+                    if (params.empty())
+                    {
+                        continue;
+                    }
+
+                    w.write("        %(%);\n",
+                        type_name,
+                        bind<write_implementation_params>(signature));
+                }
+            }
+            else if (factory.statics)
+            {
+                for (auto&& method : factory.type.MethodList())
+                {
+                    method_signature signature{ method };
+                    w.async_types = is_async(method, signature);
+                    auto method_name = get_name(method);
+
+                    w.write("        static % %(%)%;\n",
+                        signature.return_signature(),
+                        method_name,
+                        bind<write_implementation_params>(signature),
+                        is_noexcept(method) ? " noexcept" : "");
+                }
+            }
+        }
+
+        for (auto&&[interface_name, info] : get_interfaces(w, type))
+        {
+            if (info.base)
+            {
+                continue;
+            }
+
+            w.generic_param_stack.insert(w.generic_param_stack.end(), info.generic_param_stack.begin(), info.generic_param_stack.end());
+
+            w.write("        %(\n", type_name);
+            for (auto&& method : info.type.MethodList())
+            {
+                method_signature signature{ method };
+                w.async_types = is_async(method, signature);
+                auto method_name = get_name(method);
+
+                if (method != info.type.MethodList().back())
+                {
+                    w.write("            % _%,", signature.return_signature(), method_name);
+                }
+                else
+                {
+                    w.write("            % %) : ", signature.return_signature(), method_name);
+                }
+            }
+
+
+            for (auto&& method : info.type.MethodList())
+            {
+                method_signature signature{ method };
+                w.async_types = is_async(method, signature);
+                auto method_name = get_name(method);
+
+                w.write("        % %(%) { return m_% }\n",
+                    signature.return_signature(),
+                    method_name,
+                    bind<write_implementation_params>(signature));/* This should be empty for most of cases? If setter... what should I do? */
+            }
+
+            // member variable for them
+            for (auto&& method : info.type.MethodList())
+            {
+                method_signature signature{ method };
+                w.async_types = is_async(method, signature);
+                auto method_name = get_name(method);
+
+                w.write("        % m_%;\n",
+                    signature.return_signature(),
+                    method_name);
+            }
+            w.generic_param_stack.resize(w.generic_param_stack.size() - info.generic_param_stack.size());
+        }
+    }
+
     static void write_generated_static_assert(writer& w)
     {
         auto format = R"(
@@ -1001,6 +1106,61 @@ static_assert(false, "Do not compile generated C++/WinRT source files directly")
 )";
 
         w.write(format);
+    }
+
+    static void write_stub_component_h(writer& w, TypeDef const& type)
+    {
+        auto type_name = type.TypeName();
+        auto type_namespace = type.TypeNamespace();
+        auto base_type = get_base_class(type);
+        std::string base_include;
+
+        if (base_type && settings.component_filter.includes(base_type))
+        {
+            base_include = "#include \"" + get_component_filename(base_type) + ".h\"\n";
+        }
+
+        {
+            auto format = R"(#include "%.g.h"
+%#include <gmock.h>
+namespace winrt::@::implementation
+{
+    struct %%
+    {
+        %() = default;
+
+%    };
+}
+)";
+
+            w.write(format,
+                get_generated_component_filename(type),
+                base_include,
+                    // bind<write_generated_static_assert>(),
+                type_namespace,
+                type_name,
+                bind<write_component_base>(type),
+                type_name,
+                bind<write_stub_member_declarations>(type));
+
+        }
+
+        if (has_factory_members(w, type))
+        {
+            auto format = R"(namespace winrt::@::factory_implementation
+{
+    struct % : %T<%, implementation::%>
+    {
+    };
+}
+)";
+            w.write(format,
+                type_namespace,
+                type_name,
+                type_name,
+                type_name,
+                type_name);
+        }
     }
 
     static void write_component_h(writer& w, TypeDef const& type)
